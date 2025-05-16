@@ -2,19 +2,23 @@ name: Cek Layanan Indonesia
 
 on:
   schedule:
-    - cron: '*/10 * * * *'  # Setiap 10 menit
+    - cron: '*/30 * * * *'  # setiap 30 menit
   workflow_dispatch:
 
 jobs:
   check:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+    env:
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      CHAT_ID: ${{ secrets.CHAT_ID }}
+      PYTHONIOENCODING: utf-8
 
-      - name: Jalankan pengecekan
-        run: |
-          pip install requests
-          python check_services.py
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Install requests
+      run: pip install requests
+
+    - name: Jalankan pengecekan
+      run: python check_services.py
