@@ -1,12 +1,15 @@
-# -*- coding: utf-8 -*-
 import json, requests, os
 from datetime import datetime
 
-def safe_print(text):
-    try:
-        print(text)
-    except UnicodeEncodeError:
-        print(text.encode('utf-8', errors='replace').decode('utf-8'))
+# Kategorisasi manual
+LOKAL = [
+    "Shopee", "Tokopedia", "Bukalapak", "Lazada", "Blibli", "JD.ID",
+    "TikTok", "YouTube", "Facebook", "Instagram", "WhatsApp", "Twitter (X)",
+    "Telegram", "LINE", "Spotify", "Netflix", "Twitch", "Discord", "Snapchat",
+    "DANA", "OVO", "GoPay", "LinkAja", "BCA", "BRI", "Mandiri", "BNI", "BTN",
+    "Jenius", "SeaBank", "Telkomsel", "Indosat", "XL", "Smartfren",
+    "MyRepublic", "Biznet", "First Media", "PLN", "PDAM"
+]
 
 with open("services.json") as f:
     urls = json.load(f)
@@ -24,15 +27,23 @@ for name, url in urls.items():
         status = "DOWN"
     result.append((name, status))
 
+# Pisahkan & sortir
+def lokalitas(n): return n in LOKAL
+down_services = sorted([r for r in result if "DOWN" in r[1]], key=lambda x: (not lokalitas(x[0]), x[0]))
+up_services = sorted([r for r in result if "DOWN" not in r[1]], key=lambda x: (not lokalitas(x[0]), x[0]))
+
+# Format waktu
 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-notif = f"📡 <b>HASIL CEK LAYANAN ({now})</b>\n\n"
 
-for name, status in result:
-    simbol = "✅" if status.startswith("UP") else "❌"
-    notif += f"{simbol} <b>{name}</b> → <code>{status}</code>\n"
+# Format pesan
+lines = [f"📢 <b>HASIL CEK LAYANAN</b> ({now})\n"]
+for name, status in down_services + up_services:
+    simbol = "❌" if "DOWN" in status else "✅"
+    lines.append(f"{simbol} {name} → {status}")
 
-safe_print(notif)
+notif = "\n".join(lines)
 
+# Kirim ke Telegram
 TOKEN = os.environ.get("BOT_TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID")
 
