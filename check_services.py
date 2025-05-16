@@ -1,11 +1,19 @@
+# -*- coding: utf-8 -*-
 import json, requests, os
 from datetime import datetime
+
+def safe_print(text):
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        print(text.encode('utf-8', errors='replace').decode('utf-8'))
 
 with open("services.json") as f:
     urls = json.load(f)
 
 result = []
-for url in urls:
+
+for name, url in urls.items():
     try:
         r = requests.get(url, timeout=10)
         if r.status_code == 200:
@@ -14,16 +22,16 @@ for url in urls:
             status = f"DOWN ({r.status_code})"
     except:
         status = "DOWN"
-    result.append((url, status))
+    result.append((name, status))
 
-now = datetime.now().strftime("%Y-%m-%d %H:%M")
-notif = f"\ud83d\udd0e <b>HASIL CEK LAYANAN ({now})</b>\n"
+now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+notif = f"📡 <b>HASIL CEK LAYANAN ({now})</b>\n\n"
 
-for u, s in result:
-    simbol = "\u2705" if "UP" in s else "\u274c"
-    notif += f"{simbol} {u} = <b>{s}</b>\n"
+for name, status in result:
+    simbol = "✅" if status.startswith("UP") else "❌"
+    notif += f"{simbol} <b>{name}</b> → <code>{status}</code>\n"
 
-print(notif)
+safe_print(notif)
 
 TOKEN = os.environ.get("BOT_TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID")
